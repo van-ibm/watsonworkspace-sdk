@@ -11,6 +11,10 @@
     "ibm",
     "workspace"
   ],
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/van-ibm/watsonworkspace-sdk.git"
+  },
   "author": "van_staub@us.ibm.com",
   "license": "Apache-2.0",
   "devDependencies": {
