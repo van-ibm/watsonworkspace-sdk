@@ -1,0 +1,27 @@
+{
+  "name": "watsonworkspace-sdk",
+  "version": "0.0.1",
+  "description": "An unofficial IBM Watson Workspace SDK",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine"
+  },
+  "keywords": [
+    "watsonworkspace",
+    "ibm",
+    "workspace"
+  ],
+  "author": "van_staub@us.ibm.com",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "dotenv": "^4.0.0",
+    "jasmine": "^2.8.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "jsonwebtoken": "^8.1.0",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "winston": "^2.4.0"
+  }
+}
