@@ -76,9 +76,9 @@ ww.addMessageFocus(message, 'text to be underlined', 'My Lens', 'Category A', 'm
 
 The `message` argument should be obtained from a `message-created` or `message-annotation-added` event. If you are retrieving a message using `getMessage` ensure that the `id` and `content` fields are returned.  The `content` property is necessary to determine the start and end positions of the `phrase` in the overall content's text.
 
-To handle the newly added lens, use `sendTargetedMessage(userId, annotation, items)`.
+To handle the newly added lens, use `sendTargetedMessage(userId, annotation, items)`. The `annotation` is the annotationPayload returned by a `actionSelected` `message-annotation-added` event. To make it easier, use the [Watson Workspace Bot Framework](https://github.com/van-ibm/watsonworkspace-bot) to handle and parse such events.
 
-For example, to create the standard title-subtitle-buttons user interface, do the following.
+To create the standard title-subtitle-buttons user interface, do the following.
 
 ```Javascript
 const buttons = [
