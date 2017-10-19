@@ -42,24 +42,29 @@ exports.authenticate = (appId, appSecret) => {
     const retry = 10000
     let errors = 0
 
-    oauth.run(
-      appId,
-      appSecret,
-      (err, token) => {
-        if (err) {
-          logger.error(`Failed to get JWT token; retrying in ${retry / 1000} seconds`)
-          errors++
-          if (errors > 10) {
-            reject(new Error(`Too many JWT token attempts giving up`))
+    if (appId === undefined || appSecret === undefined ||
+      appId.length !== 36 || appSecret.length !== 28) {
+      reject(new Error(`appId ${appId} or appSecret has a problem`))
+    } else {
+      oauth.run(
+        appId,
+        appSecret,
+        (err, token) => {
+          if (err) {
+            logger.error(`Failed to get JWT token; retrying in ${retry / 1000} seconds`)
+            errors++
+            if (errors > 10) {
+              reject(new Error(`Too many JWT token attempts giving up`))
+            }
+            setTimeout(exports.authenticate, retry)
+            return
           }
-          setTimeout(exports.authenticate, retry)
-          return
-        }
 
-        // the token is stored in process.env to be shared with other modules
-        process.env.jwtToken = token()
-        resolve(token())
-      })
+          // the token is stored in process.env to be shared with other modules
+          process.env.jwtToken = token()
+          resolve(token())
+        })
+    }
   })
 }
 

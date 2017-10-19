@@ -19,7 +19,7 @@ exports.run = (appId, secret, cb) => {
 
   // Refresh the token
   const refresh = (cb) => {
-    logger.info(`Requesting token for appId '${appId}' and secret '${secret.replace(/.*/, '*')}'`)
+    logger.info(`Requesting token for appId '${appId}' and secret`)
 
     request.post('https://api.watsonwork.ibm.com/oauth/token', {
       auth: {
@@ -49,7 +49,7 @@ exports.run = (appId, secret, cb) => {
       setTimeout(() => { refresh(cb) }, Math.max(0, t - 60000)).unref()
 
       // Return a function that'll return the current token
-      cb(undefined, current)
+      cb(null, current)
     })
   }
 
