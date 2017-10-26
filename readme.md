@@ -8,9 +8,13 @@ Include the SDK using a Node.js require statement, authenticate, and begin runni
 API functions return data through [bluebird](http://bluebirdjs.com) promises.
 
 ```Javascript
-const ww = require('watsonworkspace-sdk')
+const SDK = require('watsonworkspace-sdk')
+const ww = new SDK(
+  process.env.APP_ID,
+  process.env.APP_SECRET
+)
 
-ww.authenticate(process.env.APP_ID, process.env.APP_SECRET)
+ww.authenticate()
 .then(token => {
   ww.sendMessage(spaceId, 'Hello from Watson Workspace SDK')
 })
@@ -22,11 +26,11 @@ ww.authenticate(process.env.APP_ID, process.env.APP_SECRET)
 ### Authentication
 
 Authentication is completed using an appId and appSecret.
-The resulting JWT token is returned through a promise, but stored as a `process.env` property.
+The resulting JWT token is returned through a promise, but stored as a private property.
 You do not need to store the JWT token; it will be automatically used and refreshed by the SDK.
 
 ```Javascript
-ww.authenticate(appId, appSecret)
+ww.authenticate()
 .then(token => ...)
 .catch(error => logger.error(error))
 ```
@@ -81,11 +85,13 @@ To handle the newly added lens, use `sendTargetedMessage(userId, annotation, ite
 To create the standard title-subtitle-buttons user interface, do the following.
 
 ```Javascript
+const UI = bot.UI // require('watsonworkspace-sdk').UI
+
 const buttons = [
-  ww.ui.button('button-submit', 'Submit')
-  ww.ui.button('button-cancel', 'Cancel')
+  UI.button('button-submit', 'Submit')
+  UI.button('button-cancel', 'Cancel')
 ]
-const dialog = ww.ui.generic('Your awesome title', 'and slightly smaller but equally good subtitle', buttons)
+const dialog = UI.generic('Your awesome title', 'and slightly smaller but equally good subtitle', buttons)
 
 ww.sendTargetedMessage(userId, annotation, dialog)
 ```
@@ -94,8 +100,10 @@ You can similarly send a card-based user interface.
 
 ```Javascript
 const cards = [
-  ww.ui.card(keyword.text, `${keyword.relevance.toString()} relevance`, '', [], date)
-  ww.ui.card(entity.type, `${entity.relevance.toString()} relevance`, entity.text, [], date)
+  UI.card(keyword.text, `${keyword.relevance.toString()} relevance`, '', [
+    UI.cardButton('More')
+  ], date)
+  UI.card(entity.type, `${entity.relevance.toString()} relevance`, entity.text, [], date)
 ]
 ww.sendTargetedMessage(userId, annotation, cards)
 ```
