@@ -2,13 +2,15 @@ describe('watsonworkspace-sdk', function () {
 
   require('dotenv').config()
 
-  const spaceId = '57cf270ee4b06c8b753629e6'
-  const ww = require('../index')
-
-  ww.logger.level = 'debug'
+  const spaceId = process.env.SPEC_SPACE_ID
+  const SDK = require('../index')
+  const ww = new SDK(
+    process.env.APP_ID,
+    process.env.APP_SECRET
+  )
 
   it('authenticate', function (done) {
-    ww.authenticate(process.env.APP_ID, process.env.APP_SECRET)
+    ww.authenticate()
     .then(token => expect(token).not.toBe(null))
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
@@ -41,7 +43,6 @@ describe('watsonworkspace-sdk', function () {
   })
 
   it('addMessageFocus', function (done) {
-    console.log(theMessage)
     ww.addMessageFocus(theMessage, 'SDK', 'Unit Test', 'addMessageFocus', 'sdk-action', '')
     .then(message => {
       expect(message).not.toBe(null)
