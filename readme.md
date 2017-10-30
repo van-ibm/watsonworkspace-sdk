@@ -85,7 +85,7 @@ To handle the newly added lens, use `sendTargetedMessage(userId, annotation, ite
 To create the standard title-subtitle-buttons user interface, do the following.
 
 ```Javascript
-const UI = bot.UI // require('watsonworkspace-sdk').UI
+const UI = require('watsonworkspace-sdk').UI
 
 const buttons = [
   UI.button('button-submit', 'Submit')
