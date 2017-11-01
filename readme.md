@@ -44,6 +44,27 @@ ww.getMessage(message.messageId, ['id', 'content', 'annotations'])
 .then(message => ...)
 ```
 
+To handle GaphQL objects you can create an Javascript object as a field value with the format
+```Javascript
+{
+  name: 'theObjectName', fields:['field1', 'field2']
+}
+```
+
+The following example shows the `Person` object with the `id` and `displayName` fields being retrieved in a message.
+
+```Javascript
+[
+  'id',
+  'content',
+  'annotations',
+  {
+    name: 'createdBy',
+    fields: ['id', 'displayName']
+  }
+]
+```
+
 To send a message into a conversation, use  `sendMessage(spaceId, content)`. If `content` is a string, the message is sent unformatted to the space.
 
 ```Javascript
@@ -109,6 +130,37 @@ ww.sendTargetedMessage(userId, annotation, cards)
 ```
 
 The `card(title, subtitle, text, buttons, date)` builder takes a bit more information that the `generic(title, text, buttons)` builder, but they're very similar. Depending on which you choose, `sendTargetedMessage` will construct the appropriate action fulfillment dialog.
+
+### Working with Information Extraction
+As messages are posted to Watson Work Services, information extraction occurs behind the scene. For each message, the entire text gets processed using [Alchemy Language](https://www.ibm.com/watson/developercloud/alchemy-language.html) services: entities, keywords, doc-sentiment, relations, concepts, taxonomy, and dates. Annotations are created if the results are not empty. For convenience, the `informationExtraction` function will parse the annotations to provide an object with such information.
+
+```Javascript
+{
+  "keywords": [
+    {
+      "relevance": 0.972529,
+      "text": "Watson Workspace SDK"
+    },
+    {
+      "relevance": 0.604772,
+      "text": "Hello"
+    }
+  ],
+  "entities": [],
+  "concepts": [
+    {
+      "dbpedia": "http://dbpedia.org/resource/AS_Watson",
+      "relevance": 0.9044,
+      "text": "AS Watson"
+    }
+  ],
+  ...
+  "docSentiment": {
+    "score": 0.729815,
+    "type": "positive"
+  }
+}
+```
 
 ### Working with raw requests
 
