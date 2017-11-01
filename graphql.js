@@ -1,5 +1,13 @@
 function toString (fields) {
-  return fields.reduce((accumulator, currentValue) => accumulator + ' ' + currentValue)
+  return fields.reduce((accumulator, currentValue) => {
+    switch (typeof currentValue) {
+      // if the field is a string, use as-is
+      case 'string':
+        return accumulator + ' ' + currentValue
+      case 'object':
+        return accumulator + ` ${currentValue['name']} { ${toString(currentValue['fields'])}}`
+    }
+  })
 }
 
 exports.addMessageFocus = `mutation AddMessageFocus($input: AddFocusInput!) {
