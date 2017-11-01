@@ -1,9 +1,12 @@
 describe('watsonworkspace-sdk', function () {
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000
 
   require('dotenv').config()
 
   const spaceId = process.env.SPEC_SPACE_ID
   const SDK = require('../index')
+  SDK.level = 'debug'
+
   const ww = new SDK(
     process.env.APP_ID,
     process.env.APP_SECRET
@@ -19,7 +22,7 @@ describe('watsonworkspace-sdk', function () {
   var messageId
 
   it('sendMessage', function (done) {
-    ww.sendMessage(spaceId, 'Hello from Watson Workspace SDK')
+    ww.sendMessage(spaceId, 'Hello from Watson Workspace SDK. I feel great. How about you?')
     .then(message => {
       messageId = message.id
       expect(message).not.toBe(null)
@@ -28,10 +31,19 @@ describe('watsonworkspace-sdk', function () {
     .finally(() => done())
   })
 
-  var theMessage
+  var theMessage = {}
 
   it('getMessage', function (done) {
-    ww.getMessage(messageId, ['id', 'annotations'])
+    ww.getMessage(messageId, [
+      'id',
+      'created',
+      'annotations',
+      'content',
+      {
+        name: 'createdBy',
+        fields: ['id', 'displayName']
+      }
+    ])
     .then(message => {
       theMessage = message
       expect(message).not.toBe(null)
@@ -40,6 +52,33 @@ describe('watsonworkspace-sdk', function () {
     })
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
+  })
+
+  it('informationExtraction', function (done) {
+    // wait 10 seconds to allow WWS to add the annotations
+    setTimeout(() => {
+      ww.getMessage(messageId, [
+        'id',
+        'created',
+        'annotations',
+        'content',
+        {
+          name: 'createdBy',
+          fields: ['id', 'displayName']
+        }
+      ])
+      .then(message => {
+        const ie = ww.extractInformation(message)
+console.log(JSON.stringify(ie, null, 2))
+        // these are just the ones expected (it is not exhaustive)
+        expect(ie.concepts.length).toBeGreaterThan(0)
+        expect(ie.keywords.length).toBeGreaterThan(0)
+        expect(ie.taxonomy.length).toBeGreaterThan(0)
+        expect(ie.docSentiment.type).not.toBe(null)
+      })
+      .catch(error => expect(error).toBeUndefined())
+      .finally(() => done())
+    }, 10000)
   })
 
   it('addMessageFocus', function (done) {
