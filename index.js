@@ -66,6 +66,10 @@ module.exports = class SDK extends EventEmitter {
               return
             }
 
+            if (this.token) {
+              logger.info('Refreshed access token')
+            }
+
             this.token = token()
             resolve(token())
           })
@@ -91,7 +95,8 @@ module.exports = class SDK extends EventEmitter {
       uri: `${baseUrl}/${route}`,
       headers: headers,
       body: body,
-      json: typeof body === 'object'
+      json: typeof body === 'object',
+      resolveWithFullResponse: false
     }
 
     logger.verbose(`${method} to '${route}'`)
@@ -141,7 +146,7 @@ module.exports = class SDK extends EventEmitter {
     return this.sendRequest(`v1/spaces/${spaceId}/messages`, 'POST', {}, body)
   }
 
-  addMessageFocus (message, phrase, lens, category, actions, payload) {
+  addMessageFocus (message, phrase, lens, category, actions, payload, hidden) {
     let id
     let pos = -1
 
@@ -173,11 +178,11 @@ module.exports = class SDK extends EventEmitter {
             category: category,
             actions: actions,
             confidence: 0.99,
-            payload: payload,
+            payload: payload ? JSON.stringify(payload) : '',
             start: pos,
             end: pos + phrase.length,
             version: 1,
-            hidden: false
+            hidden: hidden || false
           }
         }
       }
@@ -187,7 +192,7 @@ module.exports = class SDK extends EventEmitter {
   }
 
   sendTargetedMessage (userId, annotation, items) {
-    logger.info(`Sending targetted message to user ${userId}`)
+    logger.verbose(`Sending targetted message to user ${userId}`)
 
     const input = {
       conversationId: annotation.conversationId,
@@ -199,12 +204,14 @@ module.exports = class SDK extends EventEmitter {
       items = [items]
     }
 
+    if (items.length === 0) {
+      logger.error(`Targetted message has no annotations or attachments for ${userId}`)
+    }
+
     // check the type of user interface
-    if (items[0].genericAnnotation) {
-      // TODO allow an array of UI elements?
+    if (items.length && items[0].genericAnnotation) {
       input.annotations = items
     } else {
-      // TODO allow an array of UI elements?
       input.attachments = items
     }
 
