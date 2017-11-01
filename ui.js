@@ -17,6 +17,11 @@ exports.card = (title, subtitle, text, buttons, date) => {
     throw Error(`Card does not contain required information title '${title}', subtitle '${subtitle}', text '${text}'`)
   }
 
+  if (typeof date !== 'number') {
+    console.warn('Date should be an integer; attempting to convert')
+    date = new Date(date).getTime()
+  }
+
   return {
     type: 'CARD',
     cardInput: {
@@ -35,6 +40,12 @@ exports.card = (title, subtitle, text, buttons, date) => {
 exports.cardButton = (text, payload, secondary) => {
   if (text === undefined) {
     throw Error(`Button does not contain required information text '${text}'`)
+  }
+
+  if (payload) {
+    if (typeof payload === 'object') {
+      payload = JSON.stringify(payload)
+    }
   }
 
   return {
