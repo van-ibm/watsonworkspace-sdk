@@ -5,7 +5,7 @@ describe('watsonworkspace-sdk', function () {
 
   const spaceId = process.env.SPEC_SPACE_ID
   const SDK = require('../index')
-  SDK.level = 'debug'
+  SDK.level('debug')
 
   const ww = new SDK(
     process.env.APP_ID,
