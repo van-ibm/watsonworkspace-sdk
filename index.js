@@ -1,7 +1,9 @@
 'use strict'
 
 const EventEmitter = require('events')
+const fs = require('fs')
 const graphql = require('./graphql')
+const imageSize = require('image-size')
 const request = require('request-promise')
 const logger = require('winston')
 const oauth = require('./oauth')
@@ -100,7 +102,7 @@ module.exports = class SDK extends EventEmitter {
     }
 
     logger.verbose(`${method} to '${route}'`)
-    logger.debug(headers)
+    logger.debug(options)
     logger.debug(JSON.stringify(body, null, 1))
 
     return request(options)
@@ -115,6 +117,43 @@ module.exports = class SDK extends EventEmitter {
     }
 
     return this.map('annotations', this.jsonify, this.pick('message', this.sendGraphql(json)))
+  }
+
+  sendFile (spaceId, file, width, height) {
+    logger.verbose(`Sending file '${file}' to conversation '${spaceId}'`)
+
+    let uri = `${baseUrl}/v1/spaces/${spaceId}/files`
+
+    if (width && height) {
+      uri += `?dim=${width}x${height}`
+    } else {
+      // figure out the dimensions and send full size
+      const dim = imageSize(file)
+      uri += `?dim=${dim.width}x${dim.height}`
+    }
+
+    const options = {
+      method: 'POST',
+      uri: uri,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'content-type': 'multipart/form-data'
+      },
+      resolveWithFullResponse: false,
+      formData: {
+        file: {
+          value: fs.createReadStream(file),
+          options: {
+            filename: 'test.jpg',
+            contentType: 'image/jpg'
+          }
+        }
+      }
+    }
+
+    logger.debug(options)
+
+    return request(options)
   }
 
   sendMessage (spaceId, content) {
