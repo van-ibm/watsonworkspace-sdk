@@ -4,9 +4,11 @@ const EventEmitter = require('events')
 const fs = require('fs')
 const graphql = require('./graphql')
 const imageSize = require('image-size')
+const mime = require('mime-types')
 const request = require('request-promise')
 const logger = require('winston')
 const oauth = require('./oauth')
+const path = require('path')
 const Promise = require('bluebird')
 const ui = require('./ui')
 
@@ -124,12 +126,18 @@ module.exports = class SDK extends EventEmitter {
 
     let uri = `${baseUrl}/v1/spaces/${spaceId}/files`
 
+    const mimeType = mime.contentType(path.extname(file))
+
     if (width && height) {
       uri += `?dim=${width}x${height}`
     } else {
-      // figure out the dimensions and send full size
-      const dim = imageSize(file)
-      uri += `?dim=${dim.width}x${dim.height}`
+      const isImage = mimeType.toLowerCase().includes('image/')
+
+      if (isImage) {
+        // figure out the dimensions and send full size
+        const dim = imageSize(file)
+        uri += `?dim=${dim.width}x${dim.height}`
+      }
     }
 
     const options = {
@@ -144,8 +152,8 @@ module.exports = class SDK extends EventEmitter {
         file: {
           value: fs.createReadStream(file),
           options: {
-            filename: 'test.jpg',
-            contentType: 'image/jpg'
+            filename: path.parse(file).base,
+            contentType: mimeType
           }
         }
       }
