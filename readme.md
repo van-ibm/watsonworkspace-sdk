@@ -65,10 +65,10 @@ The following example shows the `Person` object with the `id` and `displayName` 
 ]
 ```
 
-To send a message into a conversation, use  `sendMessage(spaceId, content)`. If `content` is a string, the message is sent unformatted to the space.
+To send a message into a conversation, use  `sendMessage(spaceId, content)`. If `content` is a string, the message is sent as-is to the space. (Workspace supports markdown, and markdown will be rendered using this function.)
 
 ```Javascript
-ww.sendMessage(spaceId, 'Hello from Watson Workspace SDK')
+ww.sendMessage(spaceId, 'Hello from *Watson Workspace* SDK')
 .then(message => ...)
 ```
 
@@ -160,6 +160,21 @@ As messages are posted to Watson Work Services, information extraction occurs be
     "type": "positive"
   }
 }
+```
+
+### Working with files
+
+Files can be sent into a space. The mime-type will be interpreted automatically based on the file extension.
+Use the full path when constructing the file name.
+
+```Javascript
+ww.sendFile(spaceId, `/vanstaub/sdkSpec.js`)
+```
+
+If your file is an image, you can include width and height dimensions. (If width and height are omitted, the full image dimensions will be used.)
+
+```Javascript
+ww.sendFile(spaceId, `/vanstaub/keyboard_cat.gif`, 640, 480)
 ```
 
 ### Working with raw requests

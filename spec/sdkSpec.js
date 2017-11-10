@@ -22,7 +22,7 @@ describe('watsonworkspace-sdk', function () {
   var messageId
 
   it('sendMessage', function (done) {
-    ww.sendMessage(spaceId, 'Hello from Watson Workspace SDK. I feel great. How about you?')
+    ww.sendMessage(spaceId, 'Hello from *Watson Workspace* SDK. I feel great. How about you?')
     .then(message => {
       messageId = message.id
       expect(message).not.toBe(null)
@@ -85,6 +85,17 @@ console.log(JSON.stringify(ie, null, 2))
     ww.addMessageFocus(theMessage, 'SDK', 'Unit Test', 'addMessageFocus', 'sdk-action', '')
     .then(message => {
       expect(message).not.toBe(null)
+    })
+    .catch(error => expect(error).toBeUndefined())
+    .finally(() => done())
+  })
+
+  it('sendFile', function (done) {
+    ww.sendFile(spaceId, __filename)
+    .then(message => {
+      console.log(JSON.stringify(message))
+      expect(message).not.toBe(null)
+      expect(message.id).not.toBe(null)
     })
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
