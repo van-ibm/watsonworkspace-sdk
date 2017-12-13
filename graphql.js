@@ -20,12 +20,29 @@ exports.addMessageFocus = `mutation AddMessageFocus($input: AddFocusInput!) {
   }
 }`
 
+exports.createSynchronousMessage = `mutation createMessage($input: CreateMessageInput!) {
+  createMessage(input: $input) {
+    message {
+      id
+    }
+  }
+}
+`
+
 exports.createTargetedMessage = `mutation CreateTargetedMessage($input: CreateTargetedMessageInput!) {
   createTargetedMessage(input: $input) {
     successful
   }
 }
 `
+
+exports.getMe = (fields) => {
+  return `query GetMe {
+    me {
+      ${toString(fields)}
+    }
+  }`
+}
 
 exports.getMessage = (fields) => {
   // TODO make sure the id field is always present

@@ -21,6 +21,16 @@ ww.authenticate()
 .catch(error => logger.error(error))
 ```
 
+If you already have a token (through OAuth for example), you can skip the `authenticate` call.
+
+```Javascript
+const SDK = require('watsonworkspace-sdk')
+const ww = new SDK('', '', 'eyJhbGciOiJSUzI1NiIsInR ... I5ZWQtNDJ'
+)
+
+ww.sendMessage(spaceId, 'Hello from Watson Workspace SDK')
+```
+
 ## API
 
 ### Authentication

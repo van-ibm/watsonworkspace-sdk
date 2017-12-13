@@ -7,14 +7,25 @@ describe('watsonworkspace-sdk', function () {
   const SDK = require('../index')
   SDK.level('debug')
 
+  // an app such as a chatbot
   const ww = new SDK(
     process.env.APP_ID,
     process.env.APP_SECRET
   )
 
+  // an app appearing to be a user possibly
+  const me = new SDK('', '', process.env.JWT_TOKEN)
+
   it('authenticate', function (done) {
     ww.authenticate()
     .then(token => expect(token).not.toBe(null))
+    .catch(error => expect(error).toBeUndefined())
+    .finally(() => done())
+  })
+
+  it('getMe', function (done) {
+    me.getMe(['id', 'displayName', 'email'])
+    .then(person => expect(person.email).not.toBe(null))
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })
@@ -25,6 +36,15 @@ describe('watsonworkspace-sdk', function () {
     ww.sendMessage(spaceId, 'Hello from *Watson Workspace* SDK. I feel great. How about you?')
     .then(message => {
       messageId = message.id
+      expect(message).not.toBe(null)
+    })
+    .catch(error => expect(error).toBeUndefined())
+    .finally(() => done())
+  })
+
+  it('sendSynchronousMessage', function (done) {
+    me.sendSynchronousMessage(spaceId, 'Hello. I should look like a user now.')
+    .then(message => {
       expect(message).not.toBe(null)
     })
     .catch(error => expect(error).toBeUndefined())

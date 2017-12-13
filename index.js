@@ -15,11 +15,12 @@ const ui = require('./ui')
 const baseUrl = 'https://api.watsonwork.ibm.com'
 
 module.exports = class SDK extends EventEmitter {
-  constructor (appId, appSecret) {
+  constructor (appId, appSecret, token) {
     super()
 
     this.appId = appId
     this.appSecret = appSecret
+    this.token = token
   }
 
   pick (property, promise) {
@@ -110,6 +111,19 @@ module.exports = class SDK extends EventEmitter {
     return request(options)
   }
 
+  getConfigurationData (configurationToken) {
+    return this.sendRequest(
+      `v1/apps/${this.appId}/configurationData/${configurationToken}`, 'GET', {})
+  }
+
+  getMe (fields) {
+    const json = {
+      query: graphql.getMe(fields)
+    }
+
+    return this.sendGraphql(json)
+  }
+
   getMessage (id, fields) {
     const json = {
       query: graphql.getMessage(fields),
@@ -191,6 +205,20 @@ module.exports = class SDK extends EventEmitter {
     }
 
     return this.sendRequest(`v1/spaces/${spaceId}/messages`, 'POST', {}, body)
+  }
+
+  sendSynchronousMessage (spaceId, content) {
+    const json = {
+      query: graphql.createSynchronousMessage,
+      variables: {
+        input: {
+          conversationId: spaceId,
+          content: content
+        }
+      }
+    }
+
+    return this.sendGraphql(json)
   }
 
   addMessageFocus (message, phrase, lens, category, actions, payload, hidden) {
