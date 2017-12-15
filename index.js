@@ -336,6 +336,33 @@ module.exports = class SDK extends EventEmitter {
 
     return nlp
   }
+
+  uploadPhoto (file) {
+    let uri = `${baseUrl}/photos/`
+
+    const options = {
+      method: 'POST',
+      uri: uri,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'content-type': 'multipart/form-data'
+      },
+      resolveWithFullResponse: false,
+      formData: {
+        file: {
+          value: fs.createReadStream(file),
+          options: {
+            filename: path.parse(file).base,
+            contentType: 'image/jpeg'
+          }
+        }
+      }
+    }
+
+    logger.debug(options)
+
+    return request(options)
+  }
 }
 
 module.exports.level = level => {
