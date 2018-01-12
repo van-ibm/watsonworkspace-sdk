@@ -25,7 +25,19 @@ describe('watsonworkspace-sdk', function () {
 
   it('getMe', function (done) {
     me.getMe(['id', 'displayName', 'email'])
-    .then(person => expect(person.email).not.toBe(null))
+    .then(person => expect(person.me.email).toBe('van_staub@us.ibm.com'))
+    .catch(error => expect(error).toBeUndefined())
+    .finally(() => done())
+  })
+
+  it('addMember', function (done) {
+    // adds the News app
+    me.addMember(spaceId, ['3c845f47-c56a-4ca9-a1cb-12dbebd72c3b'])
+    .then(message => {
+      console.log(JSON.stringify(message, null, 2))
+      expect(message).not.toBe(null)
+      expect(message.updateSpace).not.toBe(null)
+    })
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })
@@ -42,6 +54,7 @@ describe('watsonworkspace-sdk', function () {
     .finally(() => done())
   })
 
+  // EXPERIMENTAL
   it('sendSynchronousMessage', function (done) {
     me.sendSynchronousMessage(spaceId, 'Hello. I should look like a user now.')
     .then(message => {
@@ -89,7 +102,7 @@ describe('watsonworkspace-sdk', function () {
       ])
       .then(message => {
         const ie = ww.extractInformation(message)
-console.log(JSON.stringify(ie, null, 2))
+
         // these are just the ones expected (it is not exhaustive)
         expect(ie.concepts.length).toBeGreaterThan(0)
         expect(ie.keywords.length).toBeGreaterThan(0)
@@ -120,4 +133,5 @@ console.log(JSON.stringify(ie, null, 2))
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })
+
 })

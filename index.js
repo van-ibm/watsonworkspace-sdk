@@ -14,6 +14,12 @@ const ui = require('./ui')
 
 const baseUrl = 'https://api.watsonwork.ibm.com'
 
+/*
+require('request-debug')(request, (type, data, r) => {
+  console.log(JSON.stringify(data, null, 2))
+})
+*/
+
 module.exports = class SDK extends EventEmitter {
   constructor (appId, appSecret, token) {
     super()
@@ -100,7 +106,7 @@ module.exports = class SDK extends EventEmitter {
       uri: `${baseUrl}/${route}`,
       headers: headers,
       body: body,
-      json: typeof body === 'object',
+      json: (typeof body) === 'object',
       resolveWithFullResponse: false
     }
 
@@ -214,6 +220,21 @@ module.exports = class SDK extends EventEmitter {
         input: {
           conversationId: spaceId,
           content: content
+        }
+      }
+    }
+
+    return this.sendGraphql(json)
+  }
+
+  addMember (spaceId, memberIds) {
+    const json = {
+      query: graphql.addMember,
+      variables: {
+        input: {
+          id: spaceId,
+          members: memberIds,
+          memberOperation: 'ADD'
         }
       }
     }

@@ -10,6 +10,13 @@ function toString (fields) {
   })
 }
 
+exports.addMember = `mutation addMembers ($input: UpdateSpaceInput!) {
+  updateSpace(input: $input) {
+    memberIdsChanged
+  }
+}
+`
+
 exports.addMessageFocus = `mutation AddMessageFocus($input: AddFocusInput!) {
   addMessageFocus(input: $input) {
       message {
