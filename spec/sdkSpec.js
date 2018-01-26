@@ -5,7 +5,7 @@ describe('watsonworkspace-sdk', function () {
 
   const spaceId = process.env.SPEC_SPACE_ID
   const SDK = require('../index')
-  SDK.level('debug')
+  SDK.level('info')
 
   // an app such as a chatbot
   const ww = new SDK(
@@ -38,6 +38,20 @@ describe('watsonworkspace-sdk', function () {
       expect(message).not.toBe(null)
       expect(message.updateSpace).not.toBe(null)
     })
+    .catch(error => expect(error).toBeUndefined())
+    .finally(() => done())
+  })
+
+  it('sendGraphql', function (done) {
+    ww.sendGraphql(`query getSpace { space(id: "${spaceId}") { title }}`)
+    .then(result => expect(result.space.title).toBeDefined())
+    .catch(error => expect(error).toBeUndefined())
+    .finally(() => done())
+  })
+
+  it('getSpace', function (done) {
+    ww.getSpace(spaceId, ['title'])
+    .then(result => expect(result.space.title).toBeDefined())
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })

@@ -31,7 +31,15 @@ module.exports = class SDK extends EventEmitter {
 
   pick (property, promise) {
     return new Promise((resolve, reject) => {
-      promise.then(response => resolve(response[property]))
+      promise.then(response => {
+        // guard against the response being a raw string
+        if (typeof response === 'string') {
+          logger.warn(`Can not find '${property}'; converting to JSON`)
+          response = JSON.parse(response) // convert to JSON for picking
+        }
+
+        resolve(response[property])
+      })
       .catch(err => reject(err))
     })
   }
@@ -139,6 +147,17 @@ module.exports = class SDK extends EventEmitter {
     }
 
     return this.map('annotations', this.jsonify, this.pick('message', this.sendGraphql(json)))
+  }
+
+  getSpace (id, fields) {
+    const json = {
+      query: graphql.getSpace(fields),
+      variables: {
+        id: id
+      }
+    }
+
+    return this.sendGraphql(json)
   }
 
   sendFile (spaceId, file, width, height) {
