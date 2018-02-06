@@ -14,12 +14,16 @@ const ui = require('./ui')
 
 const baseUrl = 'https://api.watsonwork.ibm.com'
 
-/*
+// controls the request-promise logging level; logs the raw req/res data
 require('request-debug')(request, (type, data, r) => {
-  console.log(JSON.stringify(data, null, 2))
+  if (logger.level === 'debug') {
+    logger.debug(JSON.stringify(data, null, 2))
+  }
 })
-*/
 
+/**
+ * A Watson Work Services App (SDK instance).
+ */
 module.exports = class SDK extends EventEmitter {
   constructor (appId, appSecret, token) {
     super()
@@ -29,6 +33,12 @@ module.exports = class SDK extends EventEmitter {
     this.token = token
   }
 
+  /**
+   * Picks an object from server response, which is a Promise. If a response is { space : {displayName: "foo"} },
+   * pick('space') returns {displayName: "foo"}.
+   * @param {string} property Fields returned in user informatation e.g. id, displayName, email
+   * @returns {Promise<Object>} Promise containing the picked object
+   */
   pick (property, promise) {
     return new Promise((resolve, reject) => {
       promise.then(response => {
@@ -44,6 +54,13 @@ module.exports = class SDK extends EventEmitter {
     })
   }
 
+  /**
+   * Fulfills a Promise and calls map() of the items defined by the property.
+   * @param {string} property The property containing a collection
+   * @param {function} fn The function to apply in map()
+   * @param {Promise<Object>} promise Promise returned from a server response
+   * @returns {Promise<Object>} Promise containing the updated data
+   */
   map (property, fn, promise) {
     return new Promise((resolve, reject) => {
       promise.then(response => {
@@ -58,10 +75,22 @@ module.exports = class SDK extends EventEmitter {
     })
   }
 
+  /**
+   * Converts a JSON string to an object.
+   * @param {string} obj String to convert
+   * @returns {Object} Converted object
+   */
   jsonify (obj) {
     return JSON.parse(obj)
   }
 
+  /**
+   * Authenticates the SDK with Watson Work Services. The resulting JWT token will be stored
+   * for subsequent use. The token can be obtained from the Promise, but it is not necessary.
+   * If a faiure occurs, the process will re-attempt every second for ten tries.
+   * The JWT token will be refreshed automatically based on the expiration set in the response.
+   * @returns {Promise<string>} Promise containing the app's JWT token
+   */
   authenticate () {
     return new Promise((resolve, reject) => {
       const retry = 10000
@@ -96,15 +125,30 @@ module.exports = class SDK extends EventEmitter {
     })
   }
 
-  sendGraphql (query) {
+  /**
+   * Sends GraphQL to Watson Work Services. The GraphQL can either be the raw string or JSON format.
+   * @param {string|Object} graphql The GraphQL query or mutation
+   * @returns {Promise<Object>} Promise containing the server response
+   */
+  sendGraphql (graphql) {
     const headers = {
-      'Content-Type': typeof query === 'string' ? 'application/graphql' : 'application/json',
+      'Content-Type': typeof graphql === 'string' ? 'application/graphql' : 'application/json',
       'x-graphql-view': 'PUBLIC, BETA'
     }
 
-    return this.pick('data', this.sendRequest(`graphql`, 'POST', headers, query))
+    return this.pick('data', this.sendRequest(`graphql`, 'POST', headers, graphql))
   }
 
+  /**
+   * Sends a request to Watson Work Services.
+   * If a POST body is set, it will be checked whether it is a string or Object.
+   * If the body is an Object, the response is assumed to also be JSON.
+   * @param {string} route The route e.g. spaces
+   * @param {string} method HTTP method e.g. GET or POST
+   * @param {Object} headers HTTP headers
+   * @param {string|Object} [body] Optional HTTP body if POSTing
+   * @returns {Promise<Object>} Promise containing the server response
+   */
   sendRequest (route, method, headers, body) {
     // add the auth header for convenience
     headers.Authorization = `Bearer ${this.token}`
@@ -119,25 +163,38 @@ module.exports = class SDK extends EventEmitter {
     }
 
     logger.verbose(`${method} to '${route}'`)
-    logger.debug(options)
-    logger.debug(JSON.stringify(body, null, 1))
 
     return request(options)
   }
 
+  /**
+   * Retrieves user configuration data.
+   * @param {string} configurationToken The configuration token sent by Watson Work Services 
+   * @returns {Promise<Object>} Promise containing the configuration data
+   */
   getConfigurationData (configurationToken) {
     return this.sendRequest(
       `v1/apps/${this.appId}/configurationData/${configurationToken}`, 'GET', {})
   }
 
+  /**
+   * Get information about a person.
+   * @param {string[]} fields Fields returned in user informatation e.g. id, displayName, email
+   * @returns {Promise<Object>} Promise containing the person object
+   */
   getMe (fields) {
     const json = {
       query: graphql.getMe(fields)
     }
 
-    return this.sendGraphql(json)
+    return this.pick('me', this.sendGraphql(json))
   }
 
+  /**
+   * Get information about a message.
+   * @param {string[]} fields Fields returned in the message e.g. id, content, annotations
+   * @returns {Promise<Object>} Promise containing the message object
+   */
   getMessage (id, fields) {
     const json = {
       query: graphql.getMessage(fields),
@@ -149,6 +206,12 @@ module.exports = class SDK extends EventEmitter {
     return this.map('annotations', this.jsonify, this.pick('message', this.sendGraphql(json)))
   }
 
+  /**
+   * Get information about a space such as membership.
+   * @param {string[]} id Space ID e.g. 57cf270ee4b06c8b753629e6
+   * @param {string[]} fields Fields returned in space informatation
+   * @returns {Promise<Object>} Promise containing the space object
+   */
   getSpace (id, fields) {
     const json = {
       query: graphql.getSpace(fields),
@@ -157,9 +220,19 @@ module.exports = class SDK extends EventEmitter {
       }
     }
 
-    return this.sendGraphql(json)
+    return this.pick('space', this.sendGraphql(json))
   }
 
+  /**
+   * Sends a file into a space. If the file is an image, the width and height can
+   * be optionally specified. If omitted, the width and height will reflect the
+   * full size. For all other files, the mime-type will inferred on a best effort.
+   * @param {string} spaceId Space ID e.g. 57cf270ee4b06c8b753629e6
+   * @param {string} file Full path to the file
+   * @param {number} [width] Optional width to set if file is an image
+   * @param {number} [height] Optional height to set if file is an image
+   * @returns {Promise<Object>} Promise containing the space object
+   */
   sendFile (spaceId, file, width, height) {
     logger.verbose(`Sending file '${file}' to conversation '${spaceId}'`)
 
@@ -198,11 +271,15 @@ module.exports = class SDK extends EventEmitter {
       }
     }
 
-    logger.debug(options)
-
     return request(options)
   }
 
+  /**
+   * Sends a text message into a space.
+   * @param {string} spaceId Space ID e.g. 57cf270ee4b06c8b753629e6
+   * @param {string|Object|Array} content Content to be sent
+   * @returns {Promise<Object>} Promise containing the message
+   */
   sendMessage (spaceId, content) {
     logger.verbose(`Sending message to conversation '${spaceId}'`)
 
@@ -232,6 +309,12 @@ module.exports = class SDK extends EventEmitter {
     return this.sendRequest(`v1/spaces/${spaceId}/messages`, 'POST', {}, body)
   }
 
+  /**
+   * An alternative way to send a text message to a space.
+   * @param {string} spaceId Space ID e.g. 57cf270ee4b06c8b753629e6
+   * @param {string} content Content to be sent
+   * @returns {Promise<Object>} Promise containing the message
+   */
   sendSynchronousMessage (spaceId, content) {
     const json = {
       query: graphql.createSynchronousMessage,
@@ -246,6 +329,12 @@ module.exports = class SDK extends EventEmitter {
     return this.sendGraphql(json)
   }
 
+  /**
+   * Adds a member to a space.
+   * @param {} spaceId Space ID e.g. 57cf270ee4b06c8b753629e6
+   * @param {string[]} memberIds Array of member IDs e.g. 3c845f47-c56a-4ca9-a1cb-12dbebd72c3b
+   * @returns {Promise<Object>} Promise containing the updated space
+   */
   addMember (spaceId, memberIds) {
     const json = {
       query: graphql.addMember,
@@ -258,9 +347,21 @@ module.exports = class SDK extends EventEmitter {
       }
     }
 
-    return this.sendGraphql(json)
+    return this.pick('updateSpace', this.sendGraphql(json))
   }
 
+  /**
+   * Adds a focus to a specific message. The message must contain content.
+   * If the message is obtained from getMessage(), ensure the content field is set.
+   * @param {Object} message The message returned from getMessage() or a webhook
+   * @param {string} phrase The phrase to add the message (it must be present in content)
+   * @param {string} lens The lens name to be added
+   * @param {string} category The category for the lens
+   * @param {string[]} actions The actions that can be taken e.g. ['commit-code']
+   * @param {*} [payload] Data to be persisted in the focus and passed to receivers
+   * @param {*} [hidden] True if hidden from Moments
+   * @returns {Promise<Object>} Promise containing the updated message
+   */
   addMessageFocus (message, phrase, lens, category, actions, payload, hidden) {
     let id
     let pos = -1
@@ -280,7 +381,7 @@ module.exports = class SDK extends EventEmitter {
       pos = message.content.indexOf(phrase)
     }
 
-    logger.info(`Adding message focus to message '${id}'`)
+    logger.verbose(`Adding message focus to message '${id}'`)
 
     const json = {
       query: graphql.addMessageFocus,
@@ -306,6 +407,13 @@ module.exports = class SDK extends EventEmitter {
     return this.sendGraphql(json)
   }
 
+  /**
+   * Sends a targetted message (action fulfillment) to a user.
+   * @param {string} userId The user's ID e.g. 3c845f47-c56a-4ca9-a1cb-12dbebd72c3b
+   * @param {Object} annotation The annotation obtained from the 'actionSelected' event 
+   * @param {Object[]} items UI items to be added to the resulting dialog
+   * @returns {Promise<Object>} Promise containing the updated message
+   */
   sendTargetedMessage (userId, annotation, items) {
     logger.verbose(`Sending targetted message to user ${userId}`)
 
@@ -340,6 +448,12 @@ module.exports = class SDK extends EventEmitter {
     return this.sendGraphql(json)
   }
 
+  /**
+   * Extracts the AlchemyAPI data (i.e. entities, keywords, concepts, ...) into a
+   * single object.
+   * @param {Object} message Message containing annotation data
+   * @returns {Object} Object containing AlchemyAPI data
+   */
   extractInformation (message) {
     const messageAnnotations = message.annotations  // already converted to JSON
 
@@ -377,6 +491,11 @@ module.exports = class SDK extends EventEmitter {
     return nlp
   }
 
+  /**
+   * Uploads a JPEG photo to a user's or app's profile.
+   * @param {string} file The full path to the file.
+   * @returns {Promise<Object>} Promise containing the server response
+   */
   uploadPhoto (file) {
     let uri = `${baseUrl}/photos/`
 
@@ -399,14 +518,19 @@ module.exports = class SDK extends EventEmitter {
       }
     }
 
-    logger.debug(options)
-
     return request(options)
   }
 }
 
+/**
+ * Sets the debug level. If 'debug' is used, request/response debug will be set.
+ * @param {string} level Level for debug e.g. error, info, warn, verbose, debug
+ */
 module.exports.level = level => {
   logger.level = level
 }
 
+/**
+ * A user interface helper for sendTargetedMessage(). 
+ */
 module.exports.UI = ui

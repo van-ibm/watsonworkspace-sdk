@@ -25,7 +25,7 @@ describe('watsonworkspace-sdk', function () {
 
   it('getMe', function (done) {
     me.getMe(['id', 'displayName', 'email'])
-    .then(person => expect(person.me.email).toBe('van_staub@us.ibm.com'))
+    .then(person => expect(person.email).toBe('van_staub@us.ibm.com'))
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })
@@ -33,10 +33,8 @@ describe('watsonworkspace-sdk', function () {
   it('addMember', function (done) {
     // adds the News app
     me.addMember(spaceId, ['3c845f47-c56a-4ca9-a1cb-12dbebd72c3b'])
-    .then(message => {
-      console.log(JSON.stringify(message, null, 2))
-      expect(message).not.toBe(null)
-      expect(message.updateSpace).not.toBe(null)
+    .then(space => {
+      expect(space).not.toBe(null)
     })
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
@@ -44,14 +42,14 @@ describe('watsonworkspace-sdk', function () {
 
   it('sendGraphql', function (done) {
     ww.sendGraphql(`query getSpace { space(id: "${spaceId}") { title }}`)
-    .then(result => expect(result.space.title).toBeDefined())
+    .then(space => expect(space.title).toBeDefined())
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })
 
   it('getSpace', function (done) {
     ww.getSpace(spaceId, ['title'])
-    .then(result => expect(result.space.title).toBeDefined())
+    .then(space => expect(space.title).toBeDefined())
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })

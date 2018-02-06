@@ -1,5 +1,10 @@
 const logger = require('winston')
 
+/**
+ * Converts the fields into a flat list separated by spaces for GraphQL.
+ * @param {string[]|Object[]} fields Array of fields to be flattened
+ * @returns {string} GraphQL acceptable list
+ */
 function toString (fields) {
   if (fields === undefined || fields.length === 0) {
     logger.warn('No GraphQL fields requested; only id will be returned')
