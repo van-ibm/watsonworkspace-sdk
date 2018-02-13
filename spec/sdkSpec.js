@@ -4,17 +4,15 @@ describe('watsonworkspace-sdk', function () {
   require('dotenv').config()
 
   const spaceId = process.env.SPEC_SPACE_ID
+  
   const SDK = require('../index')
-  SDK.level('info')
+  SDK.level(process.env.SPEC_LOGGER_LEVEL)
 
   // an app such as a chatbot
   const ww = new SDK(
     process.env.APP_ID,
     process.env.APP_SECRET
   )
-
-  // an app appearing to be a user possibly
-  const me = new SDK('', '', process.env.JWT_TOKEN)
 
   it('authenticate', function (done) {
     ww.authenticate()
@@ -23,26 +21,9 @@ describe('watsonworkspace-sdk', function () {
     .finally(() => done())
   })
 
-  it('getMe', function (done) {
-    me.getMe(['id', 'displayName', 'email'])
-    .then(person => expect(person.email).toBe('van_staub@us.ibm.com'))
-    .catch(error => expect(error).toBeUndefined())
-    .finally(() => done())
-  })
-
-  it('addMember', function (done) {
-    // adds the News app
-    me.addMember(spaceId, ['3c845f47-c56a-4ca9-a1cb-12dbebd72c3b'])
-    .then(space => {
-      expect(space).not.toBe(null)
-    })
-    .catch(error => expect(error).toBeUndefined())
-    .finally(() => done())
-  })
-
   it('sendGraphql', function (done) {
     ww.sendGraphql(`query getSpace { space(id: "${spaceId}") { title }}`)
-    .then(space => expect(space.title).toBeDefined())
+    .then(data => expect(data.space.title).toBeDefined())
     .catch(error => expect(error).toBeUndefined())
     .finally(() => done())
   })
@@ -60,16 +41,6 @@ describe('watsonworkspace-sdk', function () {
     ww.sendMessage(spaceId, 'Hello from *Watson Workspace* SDK. I feel great. How about you?')
     .then(message => {
       messageId = message.id
-      expect(message).not.toBe(null)
-    })
-    .catch(error => expect(error).toBeUndefined())
-    .finally(() => done())
-  })
-
-  // EXPERIMENTAL
-  it('sendSynchronousMessage', function (done) {
-    me.sendSynchronousMessage(spaceId, 'Hello. I should look like a user now.')
-    .then(message => {
       expect(message).not.toBe(null)
     })
     .catch(error => expect(error).toBeUndefined())
@@ -138,7 +109,6 @@ describe('watsonworkspace-sdk', function () {
   it('sendFile', function (done) {
     ww.sendFile(spaceId, __filename)
     .then(message => {
-      console.log(JSON.stringify(message))
       expect(message).not.toBe(null)
       expect(message.id).not.toBe(null)
     })
