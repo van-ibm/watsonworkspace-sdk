@@ -1,5 +1,10 @@
 'use strict'
 
+/**
+ * Watson Work Services SDK
+ * @module watsonworkspace-sdk
+ */
+
 const EventEmitter = require('events')
 const fs = require('fs')
 const graphql = require('./graphql')
@@ -23,6 +28,7 @@ require('request-debug')(request, (type, data, r) => {
 
 /**
  * A Watson Work Services App (SDK instance).
+ * @class
  */
 module.exports = class SDK extends EventEmitter {
   constructor (appId, appSecret, token) {
@@ -46,6 +52,11 @@ module.exports = class SDK extends EventEmitter {
         if (typeof response === 'string') {
           logger.warn(`Can not find '${property}'; converting to JSON`)
           response = JSON.parse(response) // convert to JSON for picking
+        }
+
+        // check if the property is present
+        if(response[property] === undefined) {
+          console.error(`No '${property}' field in ${JSON.stringify(response, null, 2)}`)
         }
 
         resolve(response[property])
@@ -192,6 +203,7 @@ module.exports = class SDK extends EventEmitter {
 
   /**
    * Get information about a message.
+   * @param {string} id Message ID e.g. 5a79f65de4b0d880b508ed57
    * @param {string[]} fields Fields returned in the message e.g. id, content, annotations
    * @returns {Promise<Object>} Promise containing the message object
    */
@@ -208,7 +220,7 @@ module.exports = class SDK extends EventEmitter {
 
   /**
    * Get information about a space such as membership.
-   * @param {string[]} id Space ID e.g. 57cf270ee4b06c8b753629e6
+   * @param {string} id Space ID e.g. 57cf270ee4b06c8b753629e6
    * @param {string[]} fields Fields returned in space informatation
    * @returns {Promise<Object>} Promise containing the space object
    */
