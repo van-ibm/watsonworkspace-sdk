@@ -22,6 +22,30 @@ function toString (fields) {
   })
 }
 
+/**
+ * Checks if the id field is present since this is required for most functions.
+ * @param {string[]} fields Fields to check
+ */
+function hasId (fields) {
+  fields.forEach(field => {
+    if(field === 'id') {
+      return true
+    }
+  })
+
+  return false
+}
+
+/**
+ * Ensures the id field is always available.
+ * @param {string} fields Fields to check; adds id if not
+ */
+function guardId (fields) {
+  if(!hasId(fields)) {
+    fields.push('id')
+  }
+}
+
 exports.addMember = `mutation addMembers ($input: UpdateSpaceInput!) {
   updateSpace(input: $input) {
     memberIdsChanged
@@ -56,6 +80,8 @@ exports.createTargetedMessage = `mutation CreateTargetedMessage($input: CreateTa
 `
 
 exports.getMe = (fields) => {
+  guardId(fields)
+
   return `query GetMe {
     me {
       ${toString(fields)}
@@ -64,7 +90,8 @@ exports.getMe = (fields) => {
 }
 
 exports.getMessage = (fields) => {
-  // TODO make sure the id field is always present
+  guardId(fields)
+
   return `query GetMessage($id: ID!) {
     message(id: $id) {
       ${toString(fields)}
@@ -73,6 +100,8 @@ exports.getMessage = (fields) => {
 }
 
 exports.getSpace = (fields) => {
+  guardId(fields)
+
   return `query GetSpace($id: ID!) {
     space(id: $id) {
       ${toString(fields)}
