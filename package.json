@@ -19,8 +19,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "dotenv": "^4.0.0",
-    "jasmine": "^2.8.0",
-    "request-debug": "^0.2.0"
+    "jasmine": "^2.8.0"
   },
   "dependencies": {
     "bluebird": "^3.5.1",
@@ -28,6 +27,7 @@
     "jsonwebtoken": "^8.1.0",
     "mime-types": "^2.1.17",
     "request": "^2.83.0",
+    "request-debug": "^0.2.0",
     "request-promise": "^4.2.2",
     "winston": "^2.4.0"
   }
