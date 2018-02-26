@@ -102,7 +102,7 @@ ww.sendMessage(spaceId, {
 
 ### Working with action fulfillment
 
-To support action fulfillment, a message must be annotated with the `message-focus` annotation. This can be done using Watson Conversation; see [Make your app cognitive](https://workspace.ibm.com/developer/docs) in documentation. Additionally, you can add a `message-focus` annotation programmatically using `addMessageFocus(message, phrase, lens, category, actions, payload)`.
+To support action fulfillment, a message must be annotated with the `message-focus` annotation. This can be done using Watson Conversation; see [Make your app cognitive](https://developer.watsonwork.ibm.com/docs) in documentation. Additionally, you can add a `message-focus` annotation programmatically using `addMessageFocus(message, phrase, lens, category, actions, payload)`.
 
 ```Javascript
 ww.addMessageFocus(message, 'text to be underlined', 'My Lens', 'Category A', 'my-focus-action', '{foo:bar}'))
