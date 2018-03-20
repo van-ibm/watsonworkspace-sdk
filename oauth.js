@@ -32,8 +32,7 @@ exports.run = (appId, secret, cb) => {
       }
     }, (err, res) => {
       if (err || res.statusCode !== 200) {
-        logger.error(`Error (${res.statusCode}) requesting token error '${err}'`)
-        logger.error(res.body)
+        logger.error(`Error requesting token error '${err}'`)
 
         cb(err || new Error(res.statusCode), current)
         return
