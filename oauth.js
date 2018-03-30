@@ -31,24 +31,28 @@ exports.run = (appId, secret, cb) => {
         grant_type: 'client_credentials'
       }
     }, (err, res) => {
-      if (err || res.statusCode !== 200) {
+      if (err) {
         logger.error(`Error requesting token error '${err}'`)
-
-        cb(err || new Error(res.statusCode), current)
+        cb(err, current)
         return
+      } else if (res.statusCode !== 200) {
+        logger.error(`Bad status code requesting token: ${res.statusCode}`)
+        cb(new Error(res.statusCode), current)
+        return
+      } else {
+
+        // Save the fresh token
+        logger.info(`Successfully requested token`)
+        tok = res.body.access_token
+
+        // Schedule next refresh a bit before the token expires
+        const t = ttl(tok)
+        logger.verbose('Token time-to-live', t)
+        setTimeout(() => { refresh(cb) }, Math.max(0, t - 60000)).unref()
+
+        // Return a function that'll return the current token
+        cb(null, current)
       }
-
-      // Save the fresh token
-      logger.info(`Successfully requested token`)
-      tok = res.body.access_token
-
-      // Schedule next refresh a bit before the token expires
-      const t = ttl(tok)
-      logger.verbose('Token time-to-live', t)
-      setTimeout(() => { refresh(cb) }, Math.max(0, t - 60000)).unref()
-
-      // Return a function that'll return the current token
-      cb(null, current)
     })
   }
 
