@@ -126,7 +126,7 @@ module.exports = class SDK extends EventEmitter {
             }
 
             if (this.token) {
-              logger.info('Refreshed access token')
+              logger.verbose('Refreshed access token')
             }
 
             this.token = token()

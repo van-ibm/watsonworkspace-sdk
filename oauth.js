@@ -19,7 +19,7 @@ exports.run = (appId, secret, cb) => {
 
   // Refresh the token
   const refresh = (cb) => {
-    logger.info(`Requesting token for appId '${appId}' and secret`)
+    logger.verbose(`Requesting token for appId '${appId}' and secret`)
 
     request.post('https://api.watsonwork.ibm.com/oauth/token', {
       auth: {
@@ -41,9 +41,9 @@ exports.run = (appId, secret, cb) => {
         return
       } else {
 
-        // Save the fresh token
-        logger.info(`Successfully requested token`)
-        tok = res.body.access_token
+      // Save the fresh token
+      logger.verbose(`Successfully requested token`)
+      tok = res.body.access_token
 
         // Schedule next refresh a bit before the token expires
         const t = ttl(tok)
