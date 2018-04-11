@@ -1,6 +1,6 @@
 {
   "name": "watsonworkspace-sdk",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "An unofficial IBM Watson Workspace SDK",
   "main": "index.js",
   "scripts": {
