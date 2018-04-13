@@ -144,7 +144,7 @@ module.exports = class SDK extends EventEmitter {
   sendGraphql (graphql) {
     const headers = {
       'Content-Type': typeof graphql === 'string' ? 'application/graphql' : 'application/json',
-      'x-graphql-view': 'PUBLIC, BETA'
+      'x-graphql-view': 'PUBLIC, BETA, EXPERIMENTAL'
     }
 
     return this.pick('data', this.sendRequest(`graphql`, 'POST', headers, graphql))
