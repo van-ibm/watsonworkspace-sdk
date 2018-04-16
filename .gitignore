@@ -6,3 +6,4 @@ manifest.yml
 *.log
 .npmrc
 .env
+.vscode
