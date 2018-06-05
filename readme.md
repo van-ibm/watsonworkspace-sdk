@@ -187,6 +187,12 @@ If your file is an image, you can include width and height dimensions. (If width
 ww.sendFile(spaceId, `/vanstaub/keyboard_cat.gif`, 640, 480)
 ```
 
+Files can be retrieved from a space.  Use the following format to return a Promise containing the file as a stream:
+
+```JavaScript
+www.getFile(fileId)
+```
+
 ### Working with photos
 
 Similar to files, photos can be added to an application or user (assuming the application has the user's OAuth token). The format must be a `jpg` file.

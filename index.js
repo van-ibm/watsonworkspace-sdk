@@ -236,6 +236,46 @@ module.exports = class SDK extends EventEmitter {
   }
 
   /**
+   * Download a file 
+   * @param {*} fileId 
+   * @returns {Promise<Object>} Promise containing the file stream
+   */
+  getFile (fileId) {
+    return new Promise((resolve, reject) => {
+      let uri = `${baseUrl}/files/api/v1/files/file/${fileId}`;
+      let options = {
+        method: 'GET',
+        uri: uri,
+        headers: {
+          Authorization: `Bearer ${this.token}`
+        }
+      };
+      request(options)
+      .then(result => {
+        let json = JSON.parse(result)
+        let resourceurl = json.entries[0].urls.redirect_download
+        const dlResourceOptions = {
+          url: resourceurl,
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          },
+          encoding: null
+        }
+        request(dlResourceOptions)
+        .then(body => {
+          resolve(body)
+        })
+        .catch(err => {
+          reject(err)
+        });
+      })
+      .catch(err => {
+        reject(err)
+      });
+    }); 
+  }
+
+  /**
    * Sends a file into a space. If the file is an image, the width and height can
    * be optionally specified. If omitted, the width and height will reflect the
    * full size. For all other files, the mime-type will inferred on a best effort.
