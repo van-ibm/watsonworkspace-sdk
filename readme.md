@@ -54,7 +54,7 @@ ww.getMessage(message.messageId, ['id', 'content', 'annotations'])
 .then(message => ...)
 ```
 
-To handle GaphQL objects you can create an Javascript object as a field value with the format
+To handle GraphQL objects you can create a Javascript object as a field value with the format
 ```Javascript
 {
   name: 'theObjectName', fields:['field1', 'field2']
@@ -220,7 +220,7 @@ query getMessage {
 
 You can also send GraphQL JSON objects. Examples can be found in `graphql.js`. This is the default implementation in the SDK. See the `getMessage` function as an example.
 
-Special note: `sendGraphql(query)` will respond to the promise with the value of the `data` property.  Said differntly, GraphQL normally appears as:
+Special note: `sendGraphql(query)` will respond to the promise with the value of the `data` property.  Said differently, GraphQL normally appears as:
 
 ```
 {
