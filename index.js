@@ -326,6 +326,52 @@ module.exports = class SDK extends EventEmitter {
     return request(options)
   }
 
+
+  /**
+   * Similar to sendFile above, but uses a stream instead of a file from the file system.
+   * If the file is an image, the width and height can
+   * be optionally specified. If omitted, the width and height will reflect the
+   * full size. For all other files, the mime-type will inferred on a best effort.
+   * @param {string} spaceId Space ID e.g. 57cf270ee4b06c8b753629e6
+   * @param {string} fileStream a stream of the file contents
+   * @param {string} fileName the name of the file
+   * @param {string} mimeType the mime type of the file
+   * @returns {Promise<Object>} Promise containing the space object
+   */
+  sendFileStream (spaceId, fileStream, fileName, mimeType) {
+    logger.verbose(`Sending file stream to conversation '${spaceId}'`)
+
+    let uri = `${baseUrl}/v1/spaces/${spaceId}/files`
+
+    const isImage = mimeType.toLowerCase().includes('image/')
+    if (isImage) {
+      // figure out the dimensions and send full size
+      const dim = imageSize(fileStream)
+      uri += `?dim=${dim.width}x${dim.height}`
+    }
+
+    const options = {
+      method: 'POST',
+      uri: uri,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'content-type': 'multipart/form-data'
+      },
+      resolveWithFullResponse: false,
+      formData: {
+        file: {
+          value: fileStream,
+          options: {
+            filename: fileName,
+            contentType: mimeType
+          }
+        }
+      }
+    }
+
+    return request(options)
+  }
+
   /**
    * Sends a text message into a space.
    * @param {string} spaceId Space ID e.g. 57cf270ee4b06c8b753629e6
