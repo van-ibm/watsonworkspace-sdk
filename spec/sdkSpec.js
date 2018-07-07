@@ -21,6 +21,51 @@ describe('watsonworkspace-sdk', function () {
     .finally(() => done())
   })
 
+  // The following only apply to spaces created from templates:
+  // getStatus, setStatus, getProperties, setProperty
+  
+  // it('setStatus', function(done) {
+  //   ww.setStatus(spaceId, 'Closed')
+  //   .then(data => expect(data).toBeDefined())
+  //   .catch(error => expect(error).toBeUndefined())
+  //   .finally(() => done())
+  // })
+
+  // it('getStatus', function(done) {
+  //   ww.getStatus(spaceId)
+  //   .then(data => expect(data).toBeDefined())
+  //   .catch(error => expect(error).toBeUndefined())
+  //   .finally(() => done())
+  // })
+
+  // it('getProperties', function(done) {
+  //   ww.getProperties(spaceId)
+  //   .then(data => {console.log(data);expect(data).toBeDefined()})
+  //   .catch(error => expect(error).toBeUndefined())
+  //   .finally(() => done())
+  // })
+
+  // it('setProperty', function(done) {
+  //   ww.setProperty(spaceId, 'TextProp', new Date().toString())
+  //   .then(data => expect(data.updateSpace).toBeDefined())
+  //   .catch(error => expect(error).toBeUndefined())
+  //   .finally(() => done())
+  // })
+
+  // it('setProperty', function(done) {
+  //   ww.setProperty(spaceId, 'BoolProp', false)
+  //   .then(data => expect(data.updateSpace).toBeDefined())
+  //   .catch(error => expect(error).toBeUndefined())
+  //   .finally(() => done())
+  // })
+
+  // it('setProperty', function(done) {
+  //   ww.setProperty(spaceId, 'ListProp', 'High')
+  //   .then(data => expect(data.updateSpace).toBeDefined())
+  //   .catch(error => expect(error).toBeUndefined())
+  //   .finally(() => done())
+  // })
+
   it('sendGraphql', function (done) {
     ww.sendGraphql(`query getSpace { space(id: "${spaceId}") { title }}`)
     .then(data => expect(data.space.title).toBeDefined())

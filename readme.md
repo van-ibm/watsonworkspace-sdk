@@ -142,7 +142,7 @@ ww.sendTargetedMessage(userId, annotation, cards)
 The `card(title, subtitle, text, buttons, date)` builder takes a bit more information that the `generic(title, text, buttons)` builder, but they're very similar. Depending on which you choose, `sendTargetedMessage` will construct the appropriate action fulfillment dialog.
 
 ### Working with Information Extraction
-As messages are posted to Watson Work Services, information extraction occurs behind the scene. For each message, the entire text gets processed using [Alchemy Language](https://www.ibm.com/watson/developercloud/alchemy-language.html) services: entities, keywords, doc-sentiment, relations, concepts, taxonomy, and dates. Annotations are created if the results are not empty. For convenience, the `informationExtraction` function will parse the annotations to provide an object with such information.
+As messages are posted to Watson Work Services; information extraction occurs behind the scene. For each message, the entire text gets processed using [Alchemy Language](https://www.ibm.com/watson/developercloud/alchemy-language.html) services: entities, keywords, doc-sentiment, relations, concepts, taxonomy, and dates. Annotations are created if the results are not empty. For convenience, the `informationExtraction` function will parse the annotations to provide an object with such information.
 
 ```Javascript
 {
@@ -174,8 +174,9 @@ As messages are posted to Watson Work Services, information extraction occurs be
 
 ### Working with files
 
-Files can be sent into a space. The mime-type will be interpreted automatically based on the file extension.
-Use the full path when constructing the file name.
+Files can be sent into a space. Two functions are provided, `sendFile` and `sendFileStream`. 
+
+Use `sendFile` when you have a file on the file system. The mime-type will be interpreted automatically based on the file extension. Use the full path when constructing the file name.
 
 ```Javascript
 ww.sendFile(spaceId, `/vanstaub/sdkSpec.js`)
@@ -185,6 +186,13 @@ If your file is an image, you can include width and height dimensions. (If width
 
 ```Javascript
 ww.sendFile(spaceId, `/vanstaub/keyboard_cat.gif`, 640, 480)
+```
+
+Use `sendFileStream` when you have the file in a `stream` format (for example, when your app has downloaded it
+from another server).  You must provide the file name and mime-type.
+
+```Javascript
+sendFileStream (spaceId, stream, 'awesome.jpg', 'image/jpeg')
 ```
 
 Files can be retrieved from a space.  Use the following format to return a Promise containing the file as a stream:
@@ -200,6 +208,25 @@ Similar to files, photos can be added to an application or user (assuming the ap
 ```Javascript
 ww.uploadPhoto(`/vanstaub/van.jpg`)
 ```
+
+### Working with templates
+
+Functionality is provided to access the properties and status provided with a space created from a 
+[template](https://github.com/watsonwork/watsonwork-developer-docs/blob/master/guides/V1_space_template_main.md).
+
+Get all the properties of a space:
+
+```Javascript
+ww.getProperties(spaceId) // returns a promise resolving to an array containing the properties and their values
+
+ww.setProperty(spaceId, propertyName, propertyValue) // sets the value of a property
+
+ww.getStatus(spaceId) // returns a promise resolving to the status
+
+ww.setStatus(spaceId, newStatus) // sets the status
+```
+
+NOTE: Templates are an EXPERIMENTAL feature of Watson Workspace; as it evolves, this SDK may evolve with it.
 
 ### Working with raw requests
 

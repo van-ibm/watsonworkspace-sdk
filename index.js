@@ -513,7 +513,7 @@ module.exports = class SDK extends EventEmitter {
    * @returns {Promise<Object>} Promise containing the updated message
    */
   sendTargetedMessage (userId, annotation, items) {
-    logger.verbose(`Sending targetted message to user ${userId}`)
+    logger.verbose(`Sending targeted message to user ${userId}`)
 
     const input = {
       conversationId: annotation.conversationId,
@@ -618,6 +618,247 @@ module.exports = class SDK extends EventEmitter {
 
     return request(options)
   }
+
+  /**
+   * Get the current human-readable status of a space created from a template
+   * @param {string} spaceId 
+   * @returns {string} the current status
+   */
+  getStatus(spaceId) {
+    return new Promise((resolve, reject) => {
+      const query = `query getSpace {
+        space(id: "${spaceId}") {
+          statusValueId
+          templateInfo {
+            spaceStatus {
+              defaultValue
+              acceptableValues {
+                id
+                displayName
+              }
+            }
+          }
+        }
+      }
+      `;
+      this.sendGraphql(query)
+      .then(result => {
+        const acceptableValue = result.space.templateInfo.spaceStatus.acceptableValues.find(function(value) {
+          return value.id === result.space.statusValueId;
+        });
+        resolve(acceptableValue.displayName);
+      })
+      .catch(err => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Set the status of a space created from a template
+   * @param {string} spaceId The space Id
+   * @param {string} newStatus The human-readable status to set
+   */
+  setStatus(spaceId, newStatus) {
+    return new Promise( (resolve, reject) => {
+      // first get the acceptable status values
+      const query = `query getSpace {
+         space(id: "${spaceId}") {    
+           templateInfo {
+             spaceStatus {
+               acceptableValues {
+                 id
+                 displayName
+               }
+             }
+           }
+         }
+       }`;
+      this.sendGraphql(query)
+      .then(results => {
+        // now find the one which matches our new status
+        var statusValue = results.space.templateInfo.spaceStatus.acceptableValues.find(function(value) {
+          return value.displayName === newStatus;
+        });
+        if (statusValue) {
+          // set that status value Id into the mutation
+          const updateStatusMutation = `mutation {
+              updateSpace(input: {
+                id: "${spaceId}",
+                statusValue:  {
+                    statusValueId: "${statusValue.id}"
+                  }
+              }
+              ) {
+                memberIdsChanged
+              }
+            }`;
+          //  and execute
+          resolve(this.sendGraphql(updateStatusMutation));
+        } else {
+          reject(`The value [${newStatus}] is not a valid status to set.`);
+        }
+      })
+      .catch(err => {
+         reject(err);
+      });
+   });
+  }
+
+  /**
+   * Return an array of the property display names and human-readable values.
+   * Each item in the array has a `propertyName` with the human-readable name of the property,
+   * and a `propertyValue` with the human-readable value, converted from the value's Id.
+   * This returns a promise for consistency with the other calls.
+   * @param {string} spaceId 
+   * @returns {Promise<Object>} Promise containing an array of the properties.
+   */
+  getProperties(spaceId) {
+    return new Promise((resolve, reject) => {
+      // this graphql will get the property definitions and their current values
+      const query = `query getSpace {
+        space(id: "${spaceId}") {
+          propertyValueIds {
+            propertyId
+            propertyValueId
+          }
+          templateInfo {
+            properties {
+              items {
+                id
+                displayName
+                type
+                ... on SpaceListProperty {
+                  acceptableValues {
+                    id
+                    displayName
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      `;
+      this.sendGraphql(query)
+      .then(result => {
+        const properties = []; // to hold the result
+        // iterate through the property definitions in the template info
+        for (let i = 0, itemsLength = result.space.templateInfo.properties.items.length; i < itemsLength; i++) {
+          // for each property definition, get the current value from the propertyValueIds array
+          const property = result.space.propertyValueIds.find(function(oneProperty) {
+            return oneProperty.propertyId === result.space.templateInfo.properties.items[i].id;
+          });
+          let propertyValue; // to hold the value
+          if (result.space.templateInfo.properties.items[i].type === 'LIST') {
+            // if it's a list type, get the human-readable value
+            const acceptableValue = result.space.templateInfo.properties.items[i].acceptableValues.find(function(value) {
+              return value.id === property.propertyValueId;
+            });
+            propertyValue = acceptableValue.displayName;
+          } else {
+            // if it's not a list type, the value is whatever is in the propertyValueId
+            propertyValue = property.propertyValueId;
+          }
+          properties.push({
+            propertyName: result.space.templateInfo.properties.items[i].displayName,
+            propertyValue: propertyValue
+          });
+        }
+        resolve(properties);
+      })
+      .catch(err => {
+        reject(err);
+      })
+    });
+  }
+
+  /**
+   * Set a property of a space created from a template.
+   * @param {*} spaceId the Id of the space.
+   * @param {*} propertyName The name of the property to set.
+   * @param {*} propertyValue The value of the property to set. For a property of 
+   * type TEXT, this function will set the property value to whatever is passed in.
+   * For a property of type BOOLEAN, this function will attempt to convert the primitive
+   * boolean 'true' to the string TRUE and the primitive boolean 'false' to the string FALSE.
+   * @returns {Promise<Object>} Promise containing the server response, or a reject message.
+   */
+  setProperty(spaceId, propertyName, propertyValue) {
+    return new Promise((resolve, reject) => {
+      // get all the property definitions
+      let query = `query getSpace {
+        space(id: "${spaceId}") { 
+          templateInfo {
+          properties {
+              items {
+                id
+                displayName
+                type       
+                ... on SpaceListProperty {
+                  acceptableValues {
+                    id
+                    displayName
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`;
+      this.sendGraphql(query)
+      .then(result => {
+        // find the property we want
+        const propertyDef = result.space.templateInfo.properties.items.find(function(item) {
+          return item.displayName === propertyName
+        });
+        if (typeof propertyDef === 'undefined') {
+          reject(`Property [${propertyName}] not defined in this space.`);
+          return;
+        }
+        // if BOOLEAN, check for a valid property and replace it with its string equivalent
+        if (propertyDef.type === 'BOOLEAN') {
+          if (typeof propertyValue === 'boolean') {
+            propertyValue = propertyValue === true ? 'TRUE' : 'FALSE';
+          } else {
+            reject(`Property value [${propertyValue}] invalid for property of type BOOLEAN`);
+            return;
+          }
+        // if LIST, find the matching acceptableValue and use that
+        } else if (propertyDef.type === 'LIST') {
+          // find the acceptableValue which matches our propertyValue
+          const acceptableValue = propertyDef.acceptableValues.find( function(value) {
+            return value.displayName === propertyValue;
+          });
+          if (acceptableValue) {
+            propertyValue = acceptableValue.id;
+          } else {
+            reject(`Acceptable Value [${propertyValue}] not found for property [${propertyName}]`);
+            return;
+          }
+        }
+        // if we got here, the inputs passed our checks and were converted if necessary.
+        // Run the Graphql.
+        const mutation = `mutation {
+          updateSpace(input: {
+            id: "${spaceId}", 
+            propertyValues: [
+              {
+                propertyId: "${propertyDef.id}", 
+                propertyValueId: "${propertyValue}"
+              }
+            ]
+          }) {
+            memberIdsChanged
+          }
+        }`;
+        resolve(this.sendGraphql(mutation));
+      })
+      .catch(err => {
+        reject(err);
+      });
+    });
+  }
+
 }
 
 /**
