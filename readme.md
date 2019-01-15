@@ -1,3 +1,5 @@
+🚨 This project and other related repos have been archived. No additional development or bug fixes will be performed. Thank you to everyone that took an interest or contributed. 🚨
+
 # IBM Watson Workspace Javascript SDK
 
 An unofficial IBM Watson Workspace Javascript SDK.
